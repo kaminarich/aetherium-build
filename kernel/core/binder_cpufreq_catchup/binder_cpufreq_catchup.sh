@@ -44,6 +44,17 @@
 #   - cpufreq: negative idle_time handling already fixed (idle_time
 #     clamped to 0 at the source, no leftover (int) casts)
 #
+# Regenerated for LuminaireKernel-6.1 @ v6.1.180+: two fixes from the
+# original bundle arrived via the linux-stable merges (v6.1.178 →
+# v6.1.183) and their hunks were removed since they no longer apply in
+# either direction:
+#   - binder.c: binder_free_transaction() target_thread pinning
+#     (spin_lock(&t->lock) + tmp_ref) and its dec_tmpref unpin
+#   - cpufreq.c: cpufreq_suspend() cpus_read_lock()/cpus_read_unlock()
+#     hotplug-race protection
+# All remaining fixes are mainline backports that stable does not carry,
+# verified to still be absent and to apply cleanly at v6.1.183.
+#
 # Skipped, feature-base not present in this tree (nothing to backport
 # onto):
 #   - binder: secctx size caching fix (depends on lsm_context refactor

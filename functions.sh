@@ -86,6 +86,22 @@ resolve_android_version() {
     esac
 }
 
+# Maps ANDROID_VERSION + KERNEL_VERSION to the LuminaireKernel repo branch
+# that carries the production tree the build clones from. Historically all
+# repos used "<android>-<kernel>-live"; LuminaireKernel-6.1 was restructured
+# (the -live branch is gone) and its production branch — ACK base with the
+# linux-stable catch-up merges — is now "<android>-<kernel>-luminaire".
+# Shared by build.sh and arsenal.sh so a future restructure only needs
+# updating here. Probe at clone time if a listed branch ever disappears:
+# git ls-remote --heads on the repo shows what actually exists.
+resolve_kernel_branch() {
+    local android="$1" kernel="$2"
+    case "${android}-${kernel}" in
+        "android14-6.1") echo "android14-6.1-luminaire" ;;
+        *)               echo "${android}-${kernel}-live" ;;
+    esac
+}
+
 # Sources every *.sh in setup/, in order. Shared by build.sh and arsenal.sh.
 run_setup() {
     echo "::group::📦 Setup"

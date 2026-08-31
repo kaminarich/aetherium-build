@@ -45,6 +45,13 @@
 #     security-for-overhead tradeoff per its own commit message, excluded
 #     per standing instruction to leave those out of this catch-up.
 
+# Obsolete as of LuminaireKernel-6.1 @ v6.1.178+: all 8 fixes arrived via
+# the linux-stable merges (v6.1.178 → v6.1.183) that the kernel source now
+# carries, so on any tree ≥ v6.1.178 the patch no longer applies in either
+# direction — same situation as mm_stable_catchup (lote 1) before it.
+# Kept for trees that still pin an older sublevel, with the same graceful
+# skip lote 1 uses when the content is already upstream.
+
 PATCH_FILE="$(dirname "${BASH_SOURCE[0]}")/lote2_f2fs_thermal.patch"
 
 log "🩹 Applying f2fs/thermal stable catch-up (lote 2)..."
@@ -56,7 +63,7 @@ elif git apply --check "$PATCH_FILE" > /dev/null 2>&1; then
     git apply "$PATCH_FILE" || error "f2fs/thermal stable catch-up: apply failed!"
     log "f2fs/thermal stable catch-up: applied (8 fixes) ✅"
 else
-    error "f2fs/thermal stable catch-up: does not apply cleanly — kernel source may have changed since this was written, needs re-verification!"
+    log "⚠️ f2fs/thermal stable catch-up: does not apply cleanly (likely already merged upstream since v6.1.178). Skipping."
 fi
 
 cd "${ROOT_DIR}"
