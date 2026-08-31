@@ -158,6 +158,10 @@ jobs:
   prepare-matrix:
     name: "Prepare Arsenal"
     runs-on: ubuntu-latest
+    # actions:write — setup-arsenal's force-refresh path runs `gh cache delete`
+    permissions:
+      actions: write
+      contents: read
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
       addons: ${{ steps.set.outputs.addons }}
@@ -175,7 +179,7 @@ jobs:
       cache_refreshed: ${{ inputs.update_arsenal == 'yes' }}
 
     env:
-      PERSONAL_TOKEN:   ${{ secrets.PERSONAL_TOKEN }}
+      PERSONAL_TOKEN:   ${{ github.token }}
       USE_KERNEL_CACHE: ${{ inputs.update_arsenal != 'yes' }}
       USE_AK3_CACHE:    ${{ inputs.update_arsenal != 'yes' }}
       USE_CLANG_CACHE:  ${{ inputs.update_arsenal != 'yes' }}
@@ -225,7 +229,7 @@ jobs:
           build-system:   ${{ inputs.build_system }}
           kernel-version: ${{ inputs.kernel_version }}
           update-arsenal: ${{ inputs.update_arsenal }}
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
+          gh-token:       ${{ github.token }}
 
   # ======================================================
   # BUILD VARIANT (parallel)
@@ -235,12 +239,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     needs: prepare-matrix
+    # contents:write — checkpoint manifest push to main + cache release
+    # create/upload. actions:write — `gh cache delete` on force refresh.
+    # Everything here targets THIS repo or public upstreams, so the
+    # per-run built-in token covers it all — no PAT dependency (the old
+    # PERSONAL_TOKEN expired and broke checkpoint/cache-save with 401s).
+    permissions:
+      contents: write
+      actions: write
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
       fail-fast: false
 
     env:
-      PERSONAL_TOKEN:              ${{ secrets.PERSONAL_TOKEN }}
+      PERSONAL_TOKEN:              ${{ github.token }}
       TELEGRAM_BOT_TOKEN:          ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID:            ${{ vars.TELEGRAM_CHAT_ID }}
       TELEGRAM_THREAD_ID_TEST:     ${{ vars.TELEGRAM_THREAD_ID_TEST }}
@@ -318,7 +330,7 @@ jobs:
           kernel-variant: ${{ matrix.kernel_variant }}
           susfs:          ${{ matrix.susfs }}
           lto-mode:       ${{ inputs.lto_mode }}
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
+          gh-token:       ${{ github.token }}
 
       - name: "Disk Usage"
         run: df -h && du -sh ~/kernel-cache/ 2>/dev/null || true
@@ -352,7 +364,7 @@ jobs:
       - name: "Checkpoint (Promote/Blacklist)"  # updates manifest.json, files an issue on failed candidates
         if: always() && matrix.kernel_variant != 'VANILLA' && inputs.run_mode != 'Dry Run'
         env:
-          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           OUTCOME="${{ steps.build.outcome }}"
           [ "$OUTCOME" = "success" ] && OUTCOME="success" || OUTCOME="failure"
@@ -408,7 +420,7 @@ jobs:
           # stay as-is for the clang cache key elsewhere.
           lto-asset-name: lto-data-${{ inputs.kernel_version }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }}-${{ steps.setup-build-env.outputs.clang-variant-upper }}${{ inputs.lto_mode != 'NONE' && format('-{0}', inputs.lto_mode) || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}.tar.zst
           ccache-filename: ccache-data-${{ inputs.kernel_version }}-${{ matrix.kernel_variant }}${{ matrix.susfs && '+SUSFS' || '' }}-${{ steps.setup-build-env.outputs.clang-variant-upper }}${{ inputs.lto_mode != 'NONE' && format('-{0}', inputs.lto_mode) || '' }}-${{ needs.prepare-matrix.outputs.safe_ref }}.tar.zst
-          gh-token:       ${{ secrets.PERSONAL_TOKEN }}
+          gh-token:       ${{ github.token }}
 
       - name: "Upload Variant Link"  # for channel post aggregation
         if: inputs.run_mode == 'Release'
