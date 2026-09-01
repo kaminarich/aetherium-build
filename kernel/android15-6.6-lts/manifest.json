@@ -3,5 +3,10 @@
     "bad": [
       "0b5efe9e0102c43ca5c41174d500f5a7080cd0c7"
     ]
+  },
+  "susfs_resukisu": {
+    "bad": [
+      "4fc9c1898ea66f51847cdbc0d1473ea4ef525a70"
+    ]
   }
 }
