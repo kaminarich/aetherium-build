@@ -8,5 +8,10 @@
       "4fc9c1898ea66f51847cdbc0d1473ea4ef525a70"
     ],
     "good": "937215cb3a1b1f333d764c366c7a49972fa8e7a0"
+  },
+  "ksunext_susfs_fork": {
+    "bad": [
+      "3438d6aa431f96a23f9e625bec3d53ce1fb14161"
+    ]
   }
 }
