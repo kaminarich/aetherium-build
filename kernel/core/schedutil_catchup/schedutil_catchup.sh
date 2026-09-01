@@ -29,6 +29,15 @@
 
 PATCH_FILE="$(dirname "${BASH_SOURCE[0]}")/lote6_schedutil.patch"
 
+# These catch-up patches were written, verified, and hand-adapted against the
+# android14-6.1 tree only — running them against any other kernel version
+# would just fail the apply check (or worse, fuzz onto wrong code).
+if [ "${KERNEL_VERSION:-}" != "6.1" ]; then
+    log "schedutil_catchup: skipped — lote6 (schedutil) patches are 6.1-only (this build is ${KERNEL_VERSION})."
+    return 0 2>/dev/null || exit 0
+fi
+
+
 log "🩹 Applying schedutil stable catch-up (lote 6)..."
 cd "${KERNEL_SRC}"
 

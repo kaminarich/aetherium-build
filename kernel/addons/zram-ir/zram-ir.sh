@@ -61,6 +61,15 @@
 
 ZRAM_IR_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/addons/zram-ir/zram-ir-android14-6.1-v1.patch"
 
+# This addon's patch(es) were written and verified against the
+# android14-6.1 tree only — skip cleanly on any other kernel version
+# instead of failing the apply check.
+if [ "${KERNEL_VERSION:-}" != "6.1" ]; then
+    log "zram-ir: skipped — addon is 6.1-only (this build is ${KERNEL_VERSION})."
+    return 0 2>/dev/null || exit 0
+fi
+
+
 log "🗜️ Applying ZRAM Multi-Comp + ZRAM-IR patch..."
 [ -f "$ZRAM_IR_PATCH" ] || error "zram-ir: patch file not found at ${ZRAM_IR_PATCH}!"
 

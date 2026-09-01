@@ -13,6 +13,15 @@
 
 LZ4KD_RAW_BASE="https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU_patch/main/other/zram"
 
+# This addon's patch(es) were written and verified against the
+# android14-6.1 tree only — skip cleanly on any other kernel version
+# instead of failing the apply check.
+if [ "${KERNEL_VERSION:-}" != "6.1" ]; then
+    log "lz4kd: skipped — addon is 6.1-only (this build is ${KERNEL_VERSION})."
+    return 0 2>/dev/null || exit 0
+fi
+
+
 cd "${KERNEL_SRC}"
 
 log "Downloading LZ4KD source files..."

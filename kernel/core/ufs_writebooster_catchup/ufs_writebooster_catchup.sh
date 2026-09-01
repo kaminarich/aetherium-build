@@ -51,6 +51,15 @@
 
 PATCH_FILE="$(dirname "${BASH_SOURCE[0]}")/lote4_ufs_writebooster.patch"
 
+# These catch-up patches were written, verified, and hand-adapted against the
+# android14-6.1 tree only — running them against any other kernel version
+# would just fail the apply check (or worse, fuzz onto wrong code).
+if [ "${KERNEL_VERSION:-}" != "6.1" ]; then
+    log "ufs_writebooster_catchup: skipped — lote4 (UFS/WriteBooster) patches are 6.1-only (this build is ${KERNEL_VERSION})."
+    return 0 2>/dev/null || exit 0
+fi
+
+
 log "🩹 Applying UFS/WriteBooster stable catch-up (lote 4)..."
 cd "${KERNEL_SRC}"
 

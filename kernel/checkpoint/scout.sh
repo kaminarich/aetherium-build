@@ -33,6 +33,12 @@ source "${LUMINAIRE_PATCH_DIR}/functions.sh"
 [ -n "${KERNEL_VERSION:-}" ] || error "scout: KERNEL_VERSION not set"
 MANIFEST="${LUMINAIRE_PATCH_DIR}/kernel/$(resolve_android_version)-${KERNEL_VERSION}-lts/manifest.json"
 
+# SuSFS maintains one branch per GKI kernel version — resolve the branch
+# name for THIS build's kernel so candidate lookups target the right line
+# (a 6.1 branch tip would never exist on the 5.15/6.6 branches and the
+# pinned-ref fetch would fail downstream).
+SUSFS_BRANCH="gki-$(resolve_android_version)-${KERNEL_VERSION}"
+
 # A kernel version with no manifest.json yet just means no pin has ever
 # been promoted for it — normal for a kernel version without checkpoint
 # history yet, not a misconfiguration. Fall back to an empty object so
@@ -155,7 +161,7 @@ case "$KERNEL_VARIANT" in
 
         if [ "$SUSFS_ENABLED" = "true" ]; then
             latest=$(latest_sha_or_empty "SuSFS (ReSukiSU pairing)" \
-                "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/gki-android14-6.1" '.id')
+                "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_BRANCH}" '.id')
             resolve_component "susfs_resukisu" "SUSFS_RESUKISU" "$latest"
         fi
         ;;
@@ -173,7 +179,7 @@ case "$KERNEL_VARIANT" in
             resolve_component "sukisu_builtin" "SUKISU_BUILTIN" "$latest"
 
             latest=$(latest_sha_or_empty "SuSFS (SukiSU pairing)" \
-                "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/gki-android14-6.1" '.id')
+                "https://gitlab.com/api/v4/projects/simonpunk%2Fsusfs4ksu/repository/commits/${SUSFS_BRANCH}" '.id')
             resolve_component "susfs_sukisu" "SUSFS_SUKISU" "$latest"
         else
             # SukiSU-Ultra's own setup.sh defaults to the latest *tag* (not
@@ -200,8 +206,16 @@ case "$KERNEL_VARIANT" in
                 "https://api.github.com/repos/pershoot/KernelSU-Next/commits/dev-susfs" '.sha')
             resolve_component "ksunext_susfs_fork" "KSUNEXT_SUSFS_FORK" "$latest"
 
-            latest=$(latest_sha_or_empty "SuSFS (KSU-Next pairing, pershoot fork)" \
-                "https://gitlab.com/api/v4/projects/pershoot%2Fsusfs4ksu/repository/commits/gki-android14-6.1-dev" '.id')
+            # pershoot's fork only maintains android14-6.1 branches —
+            # for any other kernel version there is nothing to track;
+            # the version's susfs.sh errors clearly on KSUNEXT anyway.
+            if [ "$KERNEL_VERSION" = "6.1" ]; then
+                latest=$(latest_sha_or_empty "SuSFS (KSU-Next pairing, pershoot fork)" \
+                    "https://gitlab.com/api/v4/projects/pershoot%2Fsusfs4ksu/repository/commits/gki-android14-6.1-dev" '.id')
+            else
+                warn "scout: pershoot susfs fork has no branch for kernel ${KERNEL_VERSION} — skipping KSUNEXT SuSFS candidate"
+                latest=""
+            fi
             resolve_component "susfs_ksunext" "SUSFS_KSUNEXT" "$latest"
         else
             # KernelSU-Next's own setup.sh defaults to the latest *tag* when

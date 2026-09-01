@@ -31,6 +31,15 @@
 
 KCOMPRESSD_PATCH="${LUMINAIRE_PATCH_DIR}/kernel/addons/kcompressd/kcompressd-android14-6.1-v0.5.patch"
 
+# This addon's patch(es) were written and verified against the
+# android14-6.1 tree only — skip cleanly on any other kernel version
+# instead of failing the apply check.
+if [ "${KERNEL_VERSION:-}" != "6.1" ]; then
+    log "kcompressd: skipped — addon is 6.1-only (this build is ${KERNEL_VERSION})."
+    return 0 2>/dev/null || exit 0
+fi
+
+
 log "⚙️ Applying Kcompressd-Unofficial patch..."
 [ -f "$KCOMPRESSD_PATCH" ] || error "kcompressd: patch file not found at ${KCOMPRESSD_PATCH}!"
 

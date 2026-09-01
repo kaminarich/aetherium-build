@@ -67,6 +67,14 @@
 
 LZ4ZSTD_PATCH_BASE="https://raw.githubusercontent.com/mrcxlinux/kernel_patches/main/zram"
 ZSTD_SRC_BASE="https://raw.githubusercontent.com/torvalds/linux/v6.15"
+
+# The v6.15 zstd tree swap + LZ4 patch were verified against the
+# android14-6.1 tree only — 5.15's much older zstd API and 6.6's newer
+# one are unverified, so skip cleanly on any other kernel version.
+if [ "${KERNEL_VERSION:-}" != "6.1" ]; then
+    log "lz4zstd: skipped — addon is 6.1-only (this build is ${KERNEL_VERSION})."
+    return 0 2>/dev/null || exit 0
+fi
 cd "${KERNEL_SRC}"
 
 log "Downloading LZ4 patch..."
