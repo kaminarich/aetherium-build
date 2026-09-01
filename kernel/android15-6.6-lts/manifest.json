@@ -13,5 +13,10 @@
     "bad": [
       "3438d6aa431f96a23f9e625bec3d53ce1fb14161"
     ]
+  },
+  "sukisu_builtin": {
+    "bad": [
+      "6c5603f0c853a94256940273efc433cbbc85f57a"
+    ]
   }
 }
